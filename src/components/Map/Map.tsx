@@ -1,18 +1,21 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { storyData } from "@/data/storyData";
 
-// Fix for default marker icons in Leaflet with Next.js
+// Marcadores en color Oro Viejo
 const hackerIcon = L.divIcon({
   className: 'custom-div-icon',
-  html: "<div style='background-color:#c5a059; width:14px; height:14px; border-radius:50%; border: 2px solid #fdf5e6; box-shadow: 0 0 5px rgba(62, 39, 35, 0.8);'></div>",
+  html: "<div style='background-color:#c5a059; width:14px; height:14px; border-radius:50%; border: 2px solid #fdf5e6; box-shadow: 0 0 8px rgba(197,160,89,0.9);'></div>",
   iconSize: [14, 14],
   iconAnchor: [7, 7]
 });
+
+// Coordenadas de la ruta completa de Odiseo, en orden del viaje
+const routePositions: [number, number][] = storyData.map(log => [log.lat, log.lng]);
 
 interface MapControllerProps {
   activeLogId: string | null;
@@ -50,12 +53,27 @@ export default function Map({ activeLogId }: { activeLogId: string | null }) {
         zoomControl={false}
         className="w-full h-full z-0"
       >
+        {/* Mapa base con mejor contraste geográfico: Voyager de CartoDB */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          className="vintage-map-layer"
         />
         
+        {/* Línea de ruta de Odiseo — estilo mapa del tesoro */}
+        <Polyline
+          positions={routePositions}
+          pathOptions={{
+            color: '#c5a059',
+            weight: 2.5,
+            opacity: 0.85,
+            dashArray: '10, 8',
+            dashOffset: '0',
+            lineJoin: 'round',
+            lineCap: 'round',
+          }}
+        />
+
+        {/* Marcadores de cada parada */}
         {storyData.map((log) => (
           <Marker 
             key={log.id} 
@@ -74,7 +92,7 @@ export default function Map({ activeLogId }: { activeLogId: string | null }) {
         <MapController activeLogId={activeLogId} />
       </MapContainer>
       
-      {/* Decorative overlay for vintage feel */}
+      {/* Vignette decorativo */}
       <div className="map-overlay" />
     </div>
   );
